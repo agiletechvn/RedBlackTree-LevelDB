@@ -24,12 +24,37 @@ func TestLevelDB(t *testing.T) {
 	t.Logf("value :%s", string(value))
 }
 
+
+func bool2byte(bln bool) byte {
+	if bln == true {
+		return byte(1)
+	}
+
+	return byte(0)
+}
+
+func byte2bool(b byte) bool {
+	if b == byte(1) {
+		return true
+	}
+
+	return false
+}
+
 func TestManipulateLevelDBTree(t *testing.T) {
 
 	datadir := "../datadir/tomo/orderbook"
 	obdb, _ := ethdb.NewLDBDatabase(datadir, 0, 0)
 
 	tree := &RedBlackTreeExtended{NewWithBytesComparator(obdb)}
+
+	tree.EncodeToBytes = func(item *Item) ([]byte, error) {
+		return rlp.EncodeToBytes(item)
+	}
+
+	tree.DecodeBytes = func(bytes []byte, item *Item) error {
+		return rlp.DecodeBytes(bytes, item)
+	}
 
 	tree.Put([]byte("1"), []byte("a")) // 1->a (in order)
 	tree.Put([]byte("2"), []byte("b")) // 1->a, 2->b (in order)
@@ -47,12 +72,12 @@ func TestManipulateLevelDBTree(t *testing.T) {
 	// └── 2
 	//     └── 1
 
-	// tree.RemoveMin() // 2->b, 3->c, 4->d, 5->e (in order)
-	// tree.RemoveMax() // 2->b, 3->c, 4->d (in order)
-	// tree.RemoveMin() // 3->c, 4->d (in order)
-	// tree.RemoveMax() // 3->c (in order)
+	tree.RemoveMin() // 2->b, 3->c, 4->d, 5->e (in order)
+	tree.RemoveMax() // 2->b, 3->c, 4->d (in order)
+	tree.RemoveMin() // 3->c, 4->d (in order)
+	tree.RemoveMax() // 3->c (in order)
 
-	// print(&tree, t)
+	print(tree, t)
 	// Value for max key: c
 	// Value for min key: c
 	// RedBlackTree
@@ -64,7 +89,7 @@ func TestRestoreLevelDBTree(t *testing.T) {
 	obdb, _ := ethdb.NewLDBDatabase(datadir, 0, 0)
 
 	tree := &RedBlackTreeExtended{NewWithBytesComparator(obdb)}
-	tree.SetRoot([]byte("2"))
+	tree.SetRootKey([]byte("2"))
 
 	print(tree, t)
 }
