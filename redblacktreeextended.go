@@ -1,3 +1,7 @@
+// Copyright (c) 2019, Agiletech Viet Nam. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package redblacktree
 
 // RedBlackTreeExtended to demonstrate how to extend a RedBlackTree to include new functions

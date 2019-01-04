@@ -1,13 +1,7 @@
-// Copyright (c) 2015, Emir Pasic. All rights reserved.
+// Copyright (c) 2019, Agiletech Viet Nam. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package redblacktree implements a red-black tree.
-//
-// Used by TreeSet and TreeMap.
-//
-// Structure is not thread safe.
-//
 // References: http://en.wikipedia.org/wiki/Red%E2%80%93black_tree
 package redblacktree
 
@@ -35,12 +29,12 @@ type Tree struct {
 }
 
 // NewWith instantiates a red-black tree with the custom comparator.
-func NewWith(comparator Comparator, db *ethdb.LDBDatabase) *Tree {
-	return &Tree{Comparator: comparator, db: db}
+func NewWith(comparator Comparator, encode EncodeToBytes, decode DecodeBytes, db *ethdb.LDBDatabase) *Tree {
+	return &Tree{Comparator: comparator, EncodeToBytes: encode, DecodeBytes: decode, db: db}
 }
 
-func NewWithBytesComparator(db *ethdb.LDBDatabase) *Tree {
-	return &Tree{Comparator: bytes.Compare, db: db}
+func NewWithBytesComparator(encode EncodeToBytes, decode DecodeBytes, db *ethdb.LDBDatabase) *Tree {
+	return &Tree{Comparator: bytes.Compare, EncodeToBytes: encode, DecodeBytes: decode, db: db}
 }
 
 func (tree *Tree) Root() *Node {
@@ -136,6 +130,9 @@ func (tree *Tree) GetNode(key []byte) (*Node, error) {
 
 	err = tree.DecodeBytes(bytes, item)
 	// err = json.Unmarshal(bytes, item)
+
+	// fmt.Printf("Bytes :%v", item)
+
 	if item.Deleted {
 		return nil, nil
 	}
@@ -539,7 +536,7 @@ func (tree *Tree) Save(node *Node) error {
 		fmt.Println(err)
 		return nil
 	}
-
+	fmt.Printf("Save %s, value :%x\n", node.Key, value)
 	return tree.db.Put(node.Key, value)
 }
 

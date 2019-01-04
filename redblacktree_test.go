@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 func print(tree *RedBlackTreeExtended, t *testing.T) {
@@ -16,45 +17,33 @@ func print(tree *RedBlackTreeExtended, t *testing.T) {
 
 func TestLevelDB(t *testing.T) {
 	// current running folder is this folder
-	datadir := "../datadir/tomo/orderbook"
+	datadir := "datadir/agiletech/orderbook"
 	obdb, _ := ethdb.NewLDBDatabase(datadir, 0, 0)
 	// obdb.Put([]byte("1"), []byte("a"))
-	value, _ := obdb.Get([]byte("1"))
-
-	t.Logf("value :%s", string(value))
+	value, _ := obdb.Get([]byte("2"))
+	item := &Item{}
+	rlp.DecodeBytes(value, item)
+	t.Logf("value :%x, items : %s", value, item.Value)
 }
 
-
-func bool2byte(bln bool) byte {
-	if bln == true {
-		return byte(1)
-	}
-
-	return byte(0)
+func RLPEncodeToBytes(item *Item) ([]byte, error) {
+	return rlp.EncodeToBytes(item)
 }
 
-func byte2bool(b byte) bool {
-	if b == byte(1) {
-		return true
-	}
+func RLPDecodeBytes(bytes []byte, item *Item) error {
+	return rlp.DecodeBytes(bytes, item)
+}
 
-	return false
+func NewTree(datadir string) *RedBlackTreeExtended {
+
+	obdb, _ := ethdb.NewLDBDatabase(datadir, 0, 0)
+
+	return &RedBlackTreeExtended{NewWithBytesComparator(RLPEncodeToBytes, RLPDecodeBytes, obdb)}
 }
 
 func TestManipulateLevelDBTree(t *testing.T) {
-
-	datadir := "../datadir/tomo/orderbook"
-	obdb, _ := ethdb.NewLDBDatabase(datadir, 0, 0)
-
-	tree := &RedBlackTreeExtended{NewWithBytesComparator(obdb)}
-
-	tree.EncodeToBytes = func(item *Item) ([]byte, error) {
-		return rlp.EncodeToBytes(item)
-	}
-
-	tree.DecodeBytes = func(bytes []byte, item *Item) error {
-		return rlp.DecodeBytes(bytes, item)
-	}
+	datadir := "datadir/agiletech/orderbook"
+	tree := NewTree(datadir)
 
 	tree.Put([]byte("1"), []byte("a")) // 1->a (in order)
 	tree.Put([]byte("2"), []byte("b")) // 1->a, 2->b (in order)
@@ -72,12 +61,12 @@ func TestManipulateLevelDBTree(t *testing.T) {
 	// └── 2
 	//     └── 1
 
-	tree.RemoveMin() // 2->b, 3->c, 4->d, 5->e (in order)
-	tree.RemoveMax() // 2->b, 3->c, 4->d (in order)
-	tree.RemoveMin() // 3->c, 4->d (in order)
-	tree.RemoveMax() // 3->c (in order)
+	// tree.RemoveMin() // 2->b, 3->c, 4->d, 5->e (in order)
+	// tree.RemoveMax() // 2->b, 3->c, 4->d (in order)
+	// tree.RemoveMin() // 3->c, 4->d (in order)
+	// tree.RemoveMax() // 3->c (in order)
 
-	print(tree, t)
+	// print(tree, t)
 	// Value for max key: c
 	// Value for min key: c
 	// RedBlackTree
@@ -85,10 +74,9 @@ func TestManipulateLevelDBTree(t *testing.T) {
 }
 
 func TestRestoreLevelDBTree(t *testing.T) {
-	datadir := "../datadir/tomo/orderbook"
-	obdb, _ := ethdb.NewLDBDatabase(datadir, 0, 0)
+	datadir := "datadir/agiletech/orderbook"
+	tree := NewTree(datadir)
 
-	tree := &RedBlackTreeExtended{NewWithBytesComparator(obdb)}
 	tree.SetRootKey([]byte("2"))
 
 	print(tree, t)
