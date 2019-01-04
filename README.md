@@ -5,7 +5,7 @@
 ![result](./result.png)
 
 ```go
-  datadir := "../datadir/ethereum/orderbook"
+        datadir := "../datadir/ethereum/orderbook"
 	obdb, _ := ethdb.NewLDBDatabase(datadir, 0, 0)
 
 	tree := &RedBlackTreeExtended{NewWithBytesComparator(obdb)}
