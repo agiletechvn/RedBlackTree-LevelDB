@@ -2,13 +2,13 @@
 
 ### Save key-value to Red Black Tree
 
-![result](./result.png)
+![result](./demo.png)
 
 ```go
         datadir := "../datadir/ethereum/orderbook"
 	obdb, _ := ethdb.NewLDBDatabase(datadir, 0, 0)
 
-	tree := &RedBlackTreeExtended{NewWithBytesComparator(obdb)}
+	tree := &RedBlackTreeExtended{NewWithBytesComparator(RLPEncodeToBytes, RLPDecodeBytes, obdb)}
 
 	tree.Put([]byte("1"), []byte("a")) // 1->a (in order)
 	tree.Put([]byte("2"), []byte("b")) // 1->a, 2->b (in order)
@@ -44,7 +44,7 @@
   datadir := "../datadir/ethereum/orderbook"
 	obdb, _ := ethdb.NewLDBDatabase(datadir, 0, 0)
 
-	tree := &RedBlackTreeExtended{NewWithBytesComparator(obdb)}
+	tree := &RedBlackTreeExtended{NewWithBytesComparator(RLPEncodeToBytes, RLPDecodeBytes, obdb)}
 	tree.SetRoot([]byte("2"))
 
   print(tree, t)
